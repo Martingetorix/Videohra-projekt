@@ -1,3 +1,4 @@
+Tohle readme používejte na návrhy a updaty, a HLAVNĚ BĚŽTE DO SEKCE WIKI KDE JE STRÁNKA S VĚCMA CO JSOU POTŘEBA UDĚLAT, TAM SI JE ZABERTE A OZNAČTE AŽ BUDOU HOTOVÝ!1!1!1!
 Kolize 👍
 bro smazal všechen jinej text 🥀
 nešlo mi jinak poslat ty složky
