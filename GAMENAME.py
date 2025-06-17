@@ -6,8 +6,10 @@ import math
 angle=1.5
 scalar=0
 playerv=1 #rychlost hráče
-debug=False
+debug=True
 interacttimer=15
+pygame.init()
+
 
 pygame.init()
 scr_wh=(576,576)
@@ -45,6 +47,7 @@ class mapcollisionwall(pygame.sprite.Sprite):
         if self.mask.overlap_area(pygame.mask.Mask((ph.rect_right.width, ph.rect_right.height), fill=True), (ph.rect_right.x - self.rect.x, ph.rect_right.y - self.rect.y)):
             angle = 0
         Map_collisionwall.draw(screen)
+
 class mapwall(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -74,7 +77,7 @@ class playerhitbox(pygame.sprite.Sprite):
         self.rect_right.midleft = self.rect.midright
     def update(self):
         global debug
-        print(scalar)
+        # print(scalar)
         if playerv < 1: #Magie co sem dal Martin
             if (time * playerv) % 2 == 0:
                 self.poz_change = (-np.cos(angle * np.pi) * scalar, -np.sin(angle * np.pi) * scalar)
@@ -233,6 +236,7 @@ class Enemy(pygame.sprite.Sprite):
             hit_point = self.cast_ray(enemy_pos, vec_to_player_norm)
             if (int(player_pos.x), int(player_pos.y)) == (int(hit_point[0]), int(hit_point[1])):
                 print("Prohra! Hráč je v kuželu světla a není za zdí!")
+
 class ReactivePlace:
     def __init__(self, x, y, sirka, vyska):
         self.rect = pygame.Rect(x, y, sirka, vyska)
@@ -249,9 +253,28 @@ class ReactivePlace:
         """Vykreslí místo na obrazovku."""
         pygame.draw.rect(povrch, self.barva, self.rect)
 
+class Button():  # toto je zkopírováno
+    def __init__(self, image, pos, image_new):
+        self.image = image
+        self.x_pos = pos[0]
+        self.y_pos = pos[1]
+        self.image_new = image_new
+        self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
+    
+    def update(self, screen):
+        if self.image is not None:
+            screen.blit(self.image, self.rect)
 
+    def checkForInput(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+            return True
+        return False
 
-
+    def changeColor(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+            self.image = self.image_new
+        else:
+            self.image = self.image
 
 Player_object=pygame.sprite.GroupSingle()
 Player_object.add(player())        
@@ -275,65 +298,168 @@ time=0
 floor= pygame.image.load("graphics\\floor.png")
 floor=pygame.transform.scale(floor,(scr_wh))
 
-while True:
-    for event in pygame.event.get():
-        if event.type== pygame.QUIT:
-            pygame.quit()
-            exit()
 
-    time+=1
-    keys=pygame.key.get_pressed()
-    if interacttimer>0:
-        interacttimer-=1
-    elif keys[pygame.K_p]:
-        interacttimer=15
-        if debug==True:
-            debug=False
-        else:
-            debug=True
-    if keys[pygame.K_w] and keys[pygame.K_d]:
-        scalar=1
-        angle=0.75
-    elif keys[pygame.K_w] and keys[pygame.K_a]:
-        scalar=1
-        angle=0.25
-    elif keys[pygame.K_s] and keys[pygame.K_d]:
-        scalar=1
-        angle=1.25
-    elif keys[pygame.K_s] and keys[pygame.K_a]:
-        scalar=1
-        angle=1.75
 
-    elif keys[pygame.K_w]:
-        scalar=1
-        angle=0.5
-    elif keys[pygame.K_d]:
-        scalar=1
-        angle=1
-    elif keys[pygame.K_s]:
-        scalar=1
-        angle=1.5
-    elif keys[pygame.K_a]:
-        scalar=1
-        angle=0
 
-    screen.blit(floor,(0,0))
-    Map_base.update()
-    Map_collisionwall.update()
-    Player_object.update()
-    Player_hitbox.update()
-    Map_wall.update()
-    if abs(scalar)>0:
-        scalar-=0.5*np.sign(scalar)
 
-    # --- UPDATE A VYKRESLENÍ NEPŘÁTEL ---
-    Enemies.update()
-    # už nepoužíváme Enemies.draw(screen), protože každý enemy vykresluje sám ve svém update()
 
-    # --- KOLIZE NEPŘÍTEL S HRÁČEM (DETEKCE) ---
-    for enemy in Enemies:
-        if enemy.rect.colliderect(Player_hitbox.sprite.rect):
-            print("Zachycen nepřítelem!")
-    reactive_place.zkontroluj_kolizi(Player_hitbox.sprite.rect)
-    reactive_place.vykresli(screen)
-    pygame.display.update()
+background = pygame.image.load("graphics\\background.png")
+background_levels = pygame.image.load("graphics\\background_levels.png")
+background_dead = pygame.image.load("graphics\\background_dead.png")
+def dead():
+    global game_active
+    pygame.display.set_caption('YOU GOT CAUGHT - Saxoheist4D')
+    
+    while True:
+        
+        game_active = False
+        screen.blit(background_dead, (0, 0))
+        
+        DEAD_MOUSE_POS = pygame.mouse.get_pos()
+
+        DEAD_BACK = Button(image=pygame.image.load("graphics\\buttons\\back_button.png"), pos=(288, 460), image_new=pygame.image.load("graphics\\buttons\\back_button_new.png"))
+                            
+
+        DEAD_BACK.changeColor(DEAD_MOUSE_POS)
+        DEAD_BACK.update(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if DEAD_BACK.checkForInput(DEAD_MOUSE_POS):
+                    return
+        pygame.display.update()
+
+def levels():
+    pygame.display.set_caption('LEVELS - Saxoheist4D')
+    while True:
+        
+        screen.blit(background_levels, (0, 0))
+        
+        LEVELS_MOUSE_POS = pygame.mouse.get_pos()
+
+        LEVELS_BACK = Button(image=pygame.image.load("graphics\\buttons\\back_button.png"), pos=(288, 460), image_new=pygame.image.load("graphics\\buttons\\back_button_new.png"))
+                            
+
+        LEVELS_BACK.changeColor(LEVELS_MOUSE_POS)
+        LEVELS_BACK.update(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if LEVELS_BACK.checkForInput(LEVELS_MOUSE_POS):
+                    menu()
+        pygame.display.update()
+
+
+def play_loop(): # herní smyčka
+    global game_active, time, scalar, angle, interacttimer, debug
+    game_active = True
+    while game_active:
+        for event in pygame.event.get():
+            if event.type== pygame.QUIT:
+                pygame.quit()
+                exit()
+        
+        time+=1
+        keys=pygame.key.get_pressed()
+        if interacttimer>0:
+            interacttimer-=1
+        elif keys[pygame.K_p]:
+            interacttimer=15
+            if debug==True:
+                debug=False
+            else:
+                debug=True
+        if keys[pygame.K_w] and keys[pygame.K_d]:
+            scalar=1
+            angle=0.75
+        elif keys[pygame.K_w] and keys[pygame.K_a]:
+            scalar=1
+            angle=0.25
+        elif keys[pygame.K_s] and keys[pygame.K_d]:
+            scalar=1
+            angle=1.25
+        elif keys[pygame.K_s] and keys[pygame.K_a]:
+            scalar=1
+            angle=1.75
+
+        elif keys[pygame.K_w]:
+            scalar=1
+            angle=0.5
+        elif keys[pygame.K_d]:
+            scalar=1
+            angle=1
+        elif keys[pygame.K_s]:
+            scalar=1
+            angle=1.5
+        elif keys[pygame.K_a]:
+            scalar=1
+            angle=0
+
+        screen.blit(floor,(0,0))
+        Map_base.update()
+        Map_collisionwall.update()
+        Player_object.update()
+        Player_hitbox.update()
+        Map_wall.update()
+        if abs(scalar)>0:
+            scalar-=0.5*np.sign(scalar)
+
+        # --- UPDATE A VYKRESLENÍ NEPŘÁTEL ---
+        Enemies.update()
+        # už nepoužíváme Enemies.draw(screen), protože každý enemy vykresluje sám ve svém update()
+
+        # --- KOLIZE NEPŘÍTEL S HRÁČEM (DETEKCE) ---
+        for enemy in Enemies:
+            if enemy.rect.colliderect(Player_hitbox.sprite.rect):
+                print('byl jsi chycen')
+                dead()
+                return
+                        
+        reactive_place.zkontroluj_kolizi(Player_hitbox.sprite.rect)
+        reactive_place.vykresli(screen)
+        pygame.display.update()
+        
+    
+
+def menu():
+    pygame.display.set_caption('MENU - Saxoheist4D')
+    while True:
+        screen.blit(background, (0, 0))
+
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+    
+        PLAY_BUTTON = Button(image=pygame.image.load("graphics\\buttons\\play_button.png"), pos=(288, 220), image_new=pygame.image.load("graphics\\buttons\\play_button_new.png")) 
+                        
+        LEVELS_BUTTON = Button(image=pygame.image.load("graphics\\buttons\\levels_button.png"), pos=(288, 350), image_new=pygame.image.load("graphics\\buttons\\levels_button_new.png")) 
+                            
+        QUIT_BUTTON = Button(image=pygame.image.load("graphics\\buttons\\quit_button.png"), pos=(288, 480), image_new=pygame.image.load("graphics\\buttons\\quit_button_new.png")) 
+                           
+
+
+        for button in [PLAY_BUTTON, LEVELS_BUTTON, QUIT_BUTTON]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(screen)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    play_loop()
+                if LEVELS_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    levels()
+                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    pygame.quit()
+                    exit()
+
+        pygame.display.update()
+
+menu()
