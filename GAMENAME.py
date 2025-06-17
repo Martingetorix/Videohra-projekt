@@ -15,7 +15,7 @@ pygame.init()
 scr_wh=(576,576)
 screen=pygame.display.set_mode((scr_wh)) #tuple vyjadřuje výšku a šířku scalar pxl
 pygame.display.set_caption("Saxoheist4D")
-playerpoz=(scr_wh[0]*0.5,scr_wh[1]*0.5)
+
 
 def color(r, g, b):
     return f"\033[38;2;{r};{g};{b}m"
@@ -57,12 +57,13 @@ class mapwall(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 class playerhitbox(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, start_pos):
         super().__init__()
+        self.start_pos = start_pos
         self.image=pygame.image.load("graphics\\floor.png").convert_alpha()
         self.image=pygame.transform.scale(self.image,(8,8))
         #vytváří hlavní hitbox
-        self.rect = self.image.get_rect(center=playerpoz)
+        self.rect = self.image.get_rect(center=self.start_pos)
         #vytváří obdelníky kolem hlavního hitboxu vlevo a vpravo mají prohozenou délku a šířku:
         self.rect_top = pygame.Rect(0, 0, 8, 2) 
         self.rect_top.midbottom = self.rect.midtop
@@ -75,9 +76,26 @@ class playerhitbox(pygame.sprite.Sprite):
 
         self.rect_right = pygame.Rect(0, 0, 2, 8)
         self.rect_right.midleft = self.rect.midright
-    def update(self):
+    def player_hitbox_reset_to_start(self):
+        self.rect = self.image.get_rect(center=self.start_pos)
+        self.rect_top.midbottom = self.rect.midtop
+        self.rect_bottom.midtop = self.rect.midbottom
+        self.rect_left.midright = self.rect.midleft
+        self.rect_right.midleft = self.rect.midright
+
+        if debug: #tohle vykreslí hitboxy je-li zapnutý debug
+            pygame.draw.rect(screen, (0, 0, 0), self.rect_top, 1)
+            pygame.draw.rect(screen, (0, 0, 0), self.rect_bottom, 1)
+            pygame.draw.rect(screen, (0, 0, 0), self.rect_left, 1)
+            pygame.draw.rect(screen, (0, 0, 0), self.rect_right, 1)
+    
+    def update(self, got_caught):
         global debug
         # print(scalar)
+        if got_caught:
+            self.player_hitbox_reset_to_start()
+            return
+        
         if playerv < 1: #Magie co sem dal Martin
             if (time * playerv) % 2 == 0:
                 self.poz_change = (-np.cos(angle * np.pi) * scalar, -np.sin(angle * np.pi) * scalar)
@@ -101,10 +119,11 @@ class playerhitbox(pygame.sprite.Sprite):
             pygame.draw.rect(screen, (0, 0, 0), self.rect_right, 1)
 
 class player(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, start_pos):
         super().__init__()
+        self.start_pos = start_pos
         self.image=pygame.image.load("graphics\\player\\Sam-front.png").convert_alpha()
-        self.rect=self.image.get_rect(midbottom=(playerpoz))
+        self.rect=self.image.get_rect(midbottom=(self.start_pos))
         RG_I_0=pygame.image.load("graphics\\player\\player_idle0.png").convert_alpha()
         RG_I_1=pygame.image.load("graphics\\player\\player_idle1.png").convert_alpha()
         RG_M_0=pygame.image.load("graphics\\player\\player_right0.png").convert_alpha()
@@ -125,10 +144,23 @@ class player(pygame.sprite.Sprite):
         DW_M_0=pygame.image.load("graphics\\player\\player_down0.png").convert_alpha()
         DW_M_1=pygame.image.load("graphics\\player\\player_down1.png").convert_alpha()
         
-        self.imagelist=[[[LF_I_0,LF_I_1],[LF_M_0,LF_M_1]],[[UP_I_0,UP_I_1],[UP_M_0,UP_M_1]],[[RG_I_0,RG_I_1],[RG_M_0,RG_M_1]],[[DW_I_0, DW_I_1],[DW_M_0, DW_M_1]]]
+        self.imagelist=[[[LF_I_0,LF_I_1],[LF_M_0,LF_M_1]],
+                        [[UP_I_0,UP_I_1],[UP_M_0,UP_M_1]],
+                        [[RG_I_0,RG_I_1],[RG_M_0,RG_M_1]],
+                        [[DW_I_0, DW_I_1],[DW_M_0, DW_M_1]]]
         self.poz_change=(0,0)
-    def update(self):
+        
+    def player_reset_to_start(self):
+        self.rect.center = self.start_pos
+        self.rect=self.image.get_rect(midbottom=(self.start_pos))
+    def update(self, got_caught):
         self.image=self.imagelist[int(angle*2)][int(abs(np.sign(scalar)))][int(time*0.1)%2]
+        
+        if got_caught:
+            self.player_reset_to_start()
+            return
+
+
         if playerv<1:
             if (time*playerv)%2==0:
                 self.poz_change=(-np.cos(angle*np.pi)*scalar,-np.sin(angle*np.pi)*scalar)
@@ -141,7 +173,7 @@ class player(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, path_points, speed=1):
+    def __init__(self, path_points, speed=1,):
         super().__init__()
         self.images = [pygame.image.load("graphics\\enemy.png").convert_alpha()]
         self.image = self.images[0]
@@ -155,7 +187,25 @@ class Enemy(pygame.sprite.Sprite):
         self.light_length = 150  
         self.direction = pygame.math.Vector2(1, 0)  
         
-    def update(self):
+    def reset_to_start(self):
+        """Resetne pozici, index cílového bodu i směr světelného kužele."""
+        # Nastavíme nepřítele na první bod
+        self.rect.center = self.path[0]
+        # Po resetu chceme znovu jít k druhému bodu, proto current_point = 1
+        self.current_point = 1
+        
+        # Volitelně reset animace
+        self.time_counter = 0
+        self.image = self.images[0]
+        
+        # Směr kužele můžeme zafixovat na výchozí, např. doprava
+        self.direction = pygame.math.Vector2(1, 0)
+    
+    def update(self, caught_player):
+        if caught_player == True:
+            self.reset_to_start()
+            return
+          
         if not self.path:
             return
         
@@ -236,6 +286,7 @@ class Enemy(pygame.sprite.Sprite):
             hit_point = self.cast_ray(enemy_pos, vec_to_player_norm)
             if (int(player_pos.x), int(player_pos.y)) == (int(hit_point[0]), int(hit_point[1])):
                 print("Prohra! Hráč je v kuželu světla a není za zdí!")
+                return True
 
 class ReactivePlace:
     def __init__(self, x, y, sirka, vyska):
@@ -276,10 +327,11 @@ class Button():  # toto je zkopírováno
         else:
             self.image = self.image
 
+playerpoz=(scr_wh[0]*0.5,scr_wh[1]*0.5)
 Player_object=pygame.sprite.GroupSingle()
-Player_object.add(player())        
+Player_object.add(player((playerpoz))) # startovní pozice hráče
 Player_hitbox=pygame.sprite.GroupSingle()
-Player_hitbox.add(playerhitbox())
+Player_hitbox.add(playerhitbox(playerpoz))
 Map_base=pygame.sprite.GroupSingle()
 Map_base.add(mapbase())   
 Map_wall=pygame.sprite.GroupSingle()
@@ -404,20 +456,23 @@ def play_loop(): # herní smyčka
         screen.blit(floor,(0,0))
         Map_base.update()
         Map_collisionwall.update()
-        Player_object.update()
-        Player_hitbox.update()
+        Player_object.update(False)
+        Player_hitbox.update(False)
         Map_wall.update()
         if abs(scalar)>0:
             scalar-=0.5*np.sign(scalar)
 
         # --- UPDATE A VYKRESLENÍ NEPŘÁTEL ---
-        Enemies.update()
+        Enemies.update(False)
         # už nepoužíváme Enemies.draw(screen), protože každý enemy vykresluje sám ve svém update()
 
         # --- KOLIZE NEPŘÍTEL S HRÁČEM (DETEKCE) ---
         for enemy in Enemies:
-            if enemy.rect.colliderect(Player_hitbox.sprite.rect):
+            if enemy.rect.colliderect(Player_hitbox.sprite.rect) or enemy.check_player_in_light() == True :
                 print('byl jsi chycen')
+                Enemies.update(True)
+                Player_object.update(True)
+                Player_hitbox.update(True)
                 dead()
                 return
                         
@@ -461,5 +516,5 @@ def menu():
                     exit()
 
         pygame.display.update()
-
+              
 menu()
