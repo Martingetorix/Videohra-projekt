@@ -7,4 +7,4 @@ btw byl bych pro odstranění diagonálního pohybu, vytváří strašně moc pr
 Před několika měsíci jsem dělal podobnou hru ve Scratchi, mělo to podobný problém stím, že postava se zasekne ve zdi a program se ji szaží dostat ven, jenom špatným směrem. Ten problém nastane i s rovnym pohybem musí se kolize udělat jinak
 Zatímco martin tady BREČEL já jsem konal a spravil to 😎
 
-Přidal jsem sprite 'thug', kterému se dá vyhmezit cesta pro pohyb. Mělo by to být ve větvi 'větev lol'. Nevím, jak u toho udělat kolizi s hráčem
+V podvětvi GUI je opraveno spawn hráče a spawn nepřítele po spuštění levelu znovu nebo po smrti
