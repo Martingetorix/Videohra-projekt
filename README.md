@@ -9,3 +9,6 @@ Před několika měsíci jsem dělal podobnou hru ve Scratchi, mělo to podobný
 Zatímco martin tady BREČEL já jsem konal a spravil to 😎
 
 Tohle je ta podvětev, kde je načítání spwnů po smrti a načtení levelů opraveno.
+
+Jestli budete vytvářet nějaké nové nepřátele, dveře, klíče nebo něco, tak jim dejte parametr ve kterém jsou souřednice spawnpointu.
+
