@@ -8,4 +8,5 @@ nešlo mi jinak poslat ty složky
 Tohle je ta podvětev, kde je načítání spwnů po smrti a načtení levelů opraveno.
 
 Jestli budete vytvářet nějaké nové nepřátele, dveře, klíče nebo něco, tak jim dejte parametr, ve kterém jsou souřednice spawnpointu.
+Ten zip není nejaktuálnější verze. Nejaktuálnější je ta, kterou můžete otevřít hned tady (GAMENAME)
 
