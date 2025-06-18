@@ -1,5 +1,4 @@
-Pod přidané GUI najdete nové modely pro postavu,(přidal bych to normálně, ale zlobí mi pull/push)
-
+nové modely pro postavu
 Tohle readme používejte na návrhy a updaty, a HLAVNĚ BĚŽTE DO SEKCE WIKI KDE JE STRÁNKA S VĚCMA CO JSOU POTŘEBA UDĚLAT, TAM SI JE ZABERTE A OZNAČTE AŽ BUDOU HOTOVÝ!1!1!1!
 Kolize 👍
 bro smazal všechen jinej text 🥀
